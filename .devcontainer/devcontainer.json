@@ -1,0 +1,45 @@
+{
+  "name": "pfSensible HAProxy Development",
+  "image": "mcr.microsoft.com/devcontainers/python:3.10",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "redhat.ansible",
+        "redhat.vscode-yaml",
+        "github.vscode-pull-request-github",
+        "ms-python.black-formatter",
+        "streetsidesoftware.code-spell-checker",
+        "Anthropic.claude-code"
+      ],
+      "settings": {
+        // Python configuration
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.linting.enabled": true,
+        "python.linting.pycodestyleEnabled": true,
+        "python.linting.pycodestyleArgs": ["--config=setup.cfg"],
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+
+        // Ansible configuration
+        "files.associations": {
+          "*.yml": "ansible"
+        },
+        "ansible.python.interpreterPath": "/usr/local/bin/python",
+
+        // Editor configuration
+        "editor.rulers": [160],
+        "[python]": {
+          "editor.tabSize": 4,
+          "editor.insertSpaces": true
+        }
+      }
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/postCreate.sh",
+
+  "remoteUser": "vscode"
+}

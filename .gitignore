@@ -108,3 +108,6 @@ venv.bak/
 
 # ansible-galaxy package
 *.tar.gz
+
+# VS Code user-specific settings
+.vscode/settings.json
