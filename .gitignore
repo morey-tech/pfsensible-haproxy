@@ -111,3 +111,6 @@ venv.bak/
 
 # VS Code user-specific settings
 .vscode/settings.json
+
+#macOS
+.DS_Store
