@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2021, Chris Morton, cosmo@cosmo.2y.net
+# Copyright: (c) 2025, Chris Morton, cosmo@cosmo.2y.net
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -11,8 +11,8 @@ from ansible_collections.pfsensible.core.plugins.module_utils.module_base import
 HAPROXY_FRONTEND_ARGUMENT_SPEC = dict(
     state=dict(default='present', choices=['present', 'absent']),
     name=dict(required=True, type='str'),
-    status=dict(required=True, type='str'),
-    desc=dict(required=True, type='str'),
+    status=dict(required=False, type='str'),
+    desc=dict(required=False, type='str'),
     type=dict(default='http', choices=['http', 'https']),
     httpclose=dict(default='http-keep-alive', choices=['http-keep-alive']),
     backend_serverpool=dict(required=False, type='str'),
