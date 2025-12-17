@@ -21,3 +21,6 @@ pycodestyle
 
 # Changelog management tool
 antsibull-changelog
+
+# Pre-commit framework for git hooks
+pre-commit>=3.6.0

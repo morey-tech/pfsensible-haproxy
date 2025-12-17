@@ -44,6 +44,12 @@ else
 fi
 echo ""
 
+# Install pre-commit hooks
+echo "🔧 Installing pre-commit hooks..."
+pre-commit install
+echo "✓ Pre-commit hooks installed"
+echo ""
+
 # Display environment information
 echo "========================================="
 echo "✓ DevContainer setup complete!"
