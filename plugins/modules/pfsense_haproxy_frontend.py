@@ -34,13 +34,19 @@ options:
     required: false
     type: str
   type:
-    description: Frontend type.
+    description:
+      - Frontend type/mode.
+      - C(http) - HTTP / HTTPS with offloading (SSL termination).
+      - C(https) - SSL / HTTPS (TCP mode) for SNI-based routing.
+      - C(tcp) - Plain TCP proxying for non-HTTP protocols.
     required: false
     type: str
-    choices: ['http', 'https']
+    choices: ['http', 'https', 'tcp']
     default: 'http'
   httpclose:
-    description: HTTP close mode.
+    description:
+      - HTTP close mode for connection handling.
+      - Only valid for C(http) type frontends.
     required: false
     type: str
     choices: ['http-keep-alive']
@@ -68,7 +74,9 @@ options:
     type: int
     default: 100
   addhttp_https_redirect:
-    description: Add HTTP to HTTPS redirect rule.
+    description:
+      - Add HTTP to HTTPS redirect rule.
+      - Only valid for C(http) type frontends.
     required: false
     type: bool
   state:
@@ -79,13 +87,43 @@ options:
 """
 
 EXAMPLES = """
-- name: Add frontend
+- name: Add HTTP frontend with SSL offloading
   pfsensible.haproxy.pfsense_haproxy_frontend:
     name: web-frontend
-    desc: "Web frontend"
+    desc: "HTTP frontend with SSL termination"
+    status: active
+    type: http
+    httpclose: http-keep-alive
+    ssloffloadcert: my-certificate
+    backend_serverpool: web-backend
+    state: present
+
+- name: Add HTTPS frontend (TCP mode) for SNI routing
+  pfsensible.haproxy.pfsense_haproxy_frontend:
+    name: sni-frontend
+    desc: "HTTPS in TCP mode for SNI-based routing"
     status: active
     type: https
-    backend_serverpool: web-backend
+    backend_serverpool: secure-backend
+    state: present
+
+- name: Add TCP frontend for MySQL load balancing
+  pfsensible.haproxy.pfsense_haproxy_frontend:
+    name: mysql-frontend
+    desc: "MySQL TCP Load Balancer"
+    status: active
+    type: tcp
+    backend_serverpool: mysql-backend
+    max_connections: 500
+    state: present
+
+- name: Add TCP frontend for Redis
+  pfsensible.haproxy.pfsense_haproxy_frontend:
+    name: redis-frontend
+    desc: "Redis TCP proxy"
+    status: active
+    type: tcp
+    backend_serverpool: redis-backend
     state: present
 
 - name: Remove frontend

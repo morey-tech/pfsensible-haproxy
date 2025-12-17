@@ -82,6 +82,16 @@ The following modules are currently available:
 
 The modules assume that you have already installed the haproxy pfSense package.
 
+## Supported Frontend Types
+
+The frontend module supports the following modes:
+
+- **http** - HTTP / HTTPS with offloading (SSL termination) - default mode
+- **https** - SSL / HTTPS in TCP mode for SNI-based routing
+- **tcp** - Plain TCP mode for non-HTTP protocols (MySQL, PostgreSQL, Redis, etc.)
+
+See [frontend documentation](docs/modules/pfsense_haproxy_frontend.md) for parameter compatibility and examples.
+
 ## Development
 
 ### Pre-commit Hooks

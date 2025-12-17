@@ -11,7 +11,7 @@ Manage pfSense HAProxy backends
 | Parameter | Type | Required | Default | Choices | Description |
 |-----------|------|----------|---------|---------|-------------|
 | name | str | yes | - | - | The backend name. |
-| balance | str | no | none | none, roundrobin, static-rr, leastconn, source, uri | The load balancing option. |
+| balance | str | no | none | none, roundrobin, static-rr, leastconn, source, uri | The load balancing option. Note that `uri` option is only meaningful when used with HTTP/HTTPS frontends. |
 | balance_urilen | int | no | - | - | Indicates that the algorithm should only consider that many characters at the beginning of the URI to compute the hash. |
 | balance_uridepth | int | no | - | - | Indicates the maximum directory depth to be used to compute the hash. One level is counted for each slash in the request. |
 | balance_uriwhole | bool | no | - | - | Allow using whole URI including url parameters behind a question mark. |
@@ -21,8 +21,8 @@ Manage pfSense HAProxy backends
 | check_type | str | no | none | none, Basic, HTTP, Agent, LDAP, MySQL, PostgreSQL, Redis, SMTP, ESMTP, SSL | Health check method. |
 | check_frequency | int | no | - | - | The check interval (in milliseconds). For HTTP/HTTPS defaults to 1000 if left blank. For TCP no check will be performed if left empty. |
 | log_checks | bool | no | - | - | When this option is enabled, any change of the health check status or to the server's health will be logged. |
-| httpcheck_method | str | no | - | OPTIONS, HEAD, GET, POST, PUT, DELETE, TRACE | HTTP check method. OPTIONS is the method usually best to perform server checks, HEAD and GET can also be used. If the server gets marked as down in the stats page then changing this to GET usually has the biggest chance of working, but might cause more processing overhead on the websever and is less easy to filter out of its logs. |
-| monitor_uri | str | no | - | - | Url used by http check requests. |
+| httpcheck_method | str | no | - | OPTIONS, HEAD, GET, POST, PUT, DELETE, TRACE | HTTP check method. Only relevant when used with HTTP/HTTPS frontends and `check_type=HTTP`. OPTIONS is the method usually best to perform server checks. |
+| monitor_uri | str | no | - | - | URL used by HTTP check requests. Only relevant when used with HTTP/HTTPS frontends and `check_type=HTTP`. |
 | monitor_httpversion | str | no | - | - | Defaults to "HTTP/1.0" if left blank. |
 | monitor_username | str | no | - | - | Username used in checks (MySQL and PostgreSQL) |
 | monitor_domain | str | no | - | - | Domain used in checks (SMTP and ESMTP) |
@@ -31,11 +31,29 @@ Manage pfSense HAProxy backends
 ## Examples
 
 ```yaml
-- name: Add backend
+- name: Add HTTP backend with HTTP health checks
   pfsensible.haproxy.pfsense_haproxy_backend:
-    name: exchange
-    balance: leastconn
+    name: web-backend
+    balance: roundrobin
+    check_type: HTTP
     httpcheck_method: OPTIONS
+    monitor_uri: /health
+    state: present
+
+- name: Add TCP backend for MySQL with basic health checks
+  pfsensible.haproxy.pfsense_haproxy_backend:
+    name: mysql-backend
+    balance: leastconn
+    check_type: Basic
+    check_frequency: 2000
+    state: present
+
+- name: Add TCP backend with SSL health checks
+  pfsensible.haproxy.pfsense_haproxy_backend:
+    name: redis-backend
+    balance: roundrobin
+    check_type: SSL
+    check_frequency: 1000
     state: present
 
 - name: Remove backend
