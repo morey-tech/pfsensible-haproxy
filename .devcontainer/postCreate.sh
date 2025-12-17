@@ -27,6 +27,10 @@ echo "📦 Installing Ansible collections..."
 ansible-galaxy collection install community.internal_test_tools
 # Install pfsensible.core into the workspace collection root so ansible-test can find it
 ansible-galaxy collection install -p /workspaces/ansible_collections git+https://github.com/pfsensible/core.git
+# Symlink community namespace so ansible-test can find it
+if [ ! -e /workspaces/ansible_collections/community ]; then
+    ln -s /home/vscode/.ansible/collections/ansible_collections/community /workspaces/ansible_collections/community
+fi
 echo "✓ Ansible collections installed"
 echo ""
 
