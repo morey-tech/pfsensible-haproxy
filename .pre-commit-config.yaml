@@ -1,0 +1,62 @@
+# Pre-commit hooks for pfsensible.haproxy Ansible collection
+# See https://pre-commit.com for more information
+
+default_language_version:
+  python: python3.10
+
+repos:
+  # Standard pre-commit hooks for file hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '^tests/output/'
+      - id: end-of-file-fixer
+        exclude: '^tests/output/'
+      - id: check-yaml
+        args: ['--unsafe']  # Allow custom YAML tags used by Ansible
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+      - id: check-merge-conflict
+      - id: debug-statements
+
+  # Local hooks for Ansible collection testing
+  - repo: local
+    hooks:
+      # Fast: pycodestyle linting (runs on changed Python files only)
+      - id: pycodestyle
+        name: Python Code Style (pycodestyle)
+        entry: pycodestyle
+        language: system
+        types: [python]
+        args: ['--config=setup.cfg']
+
+      # Medium: ansible-test sanity checks
+      - id: ansible-test-sanity
+        name: Ansible Test Sanity
+        entry: bash
+        language: system
+        args:
+          - -c
+          - |
+            echo "Running ansible-test sanity checks..."
+            ansible-test sanity --requirements --python 3.10
+        pass_filenames: false
+        files: '\.(py|yml|yaml)$'
+        verbose: true
+
+      # Slow: ansible-test unit tests
+      - id: ansible-test-units
+        name: Ansible Test Units
+        entry: bash
+        language: system
+        args:
+          - -c
+          - |
+            echo "Running ansible-test unit tests..."
+            ansible-test units --requirements --python 3.10
+        pass_filenames: false
+        files: '\.(py|yml|yaml)$'
+        verbose: true

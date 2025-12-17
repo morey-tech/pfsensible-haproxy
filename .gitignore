@@ -114,3 +114,6 @@ venv.bak/
 
 #macOS
 .DS_Store
+
+# Pre-commit cache
+.pre-commit-cache/
