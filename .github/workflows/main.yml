@@ -46,8 +46,8 @@ jobs:
 
       - name: Run pycodestyle
         id: pycodestyle
-        working-directory: ~/.ansible/collections/ansible_collections/pfsensible/haproxy
         run: |
+          cd $HOME/.ansible/collections/ansible_collections/pfsensible/haproxy
           echo "## Pycodestyle Results" >> $GITHUB_STEP_SUMMARY
           if pycodestyle --config=setup.cfg plugins/ tests/ 2>&1 | tee /tmp/pycodestyle.txt; then
             echo "✅ All Python files pass style checks" >> $GITHUB_STEP_SUMMARY
@@ -63,8 +63,8 @@ jobs:
 
       - name: Run ansible-test sanity
         id: sanity
-        working-directory: ~/.ansible/collections/ansible_collections/pfsensible/haproxy
         run: |
+          cd $HOME/.ansible/collections/ansible_collections/pfsensible/haproxy
           echo "## Ansible Sanity Test Results" >> $GITHUB_STEP_SUMMARY
           if ansible-test sanity --requirements --python 3.10 2>&1 | tee /tmp/sanity.txt; then
             echo "✅ All sanity tests passed" >> $GITHUB_STEP_SUMMARY
@@ -80,8 +80,8 @@ jobs:
 
       - name: Run ansible-test units
         id: units
-        working-directory: ~/.ansible/collections/ansible_collections/pfsensible/haproxy
         run: |
+          cd $HOME/.ansible/collections/ansible_collections/pfsensible/haproxy
           echo "## Ansible Unit Test Results" >> $GITHUB_STEP_SUMMARY
           if ansible-test units --requirements --python 3.10 2>&1 | tee /tmp/units.txt; then
             # Extract test count from pytest output
@@ -143,8 +143,8 @@ jobs:
 
       - name: Run ansible-test sanity
         id: sanity
-        working-directory: ~/.ansible/collections/ansible_collections/pfsensible/haproxy
         run: |
+          cd $HOME/.ansible/collections/ansible_collections/pfsensible/haproxy
           echo "## Ansible Sanity Test Results (Ansible ${{ matrix.ansible-version }})" >> $GITHUB_STEP_SUMMARY
           if ansible-test sanity --requirements --python ${{ matrix.python-version }} 2>&1 | tee /tmp/sanity.txt; then
             echo "✅ All sanity tests passed" >> $GITHUB_STEP_SUMMARY
@@ -160,8 +160,8 @@ jobs:
 
       - name: Run ansible-test units
         id: units
-        working-directory: ~/.ansible/collections/ansible_collections/pfsensible/haproxy
         run: |
+          cd $HOME/.ansible/collections/ansible_collections/pfsensible/haproxy
           echo "## Ansible Unit Test Results (Ansible ${{ matrix.ansible-version }})" >> $GITHUB_STEP_SUMMARY
           if ansible-test units --requirements --python ${{ matrix.python-version }} 2>&1 | tee /tmp/units.txt; then
             # Extract test count from pytest output
