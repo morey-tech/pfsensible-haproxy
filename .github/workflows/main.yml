@@ -2,69 +2,187 @@ name: CI
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events
+  # Triggers the workflow on push to main and feature branches
   push:
+    branches:
+      - main
+      - 'feature/**'
+  # Triggers on pull request events
   pull_request:
+    types: [opened, synchronize, reopened]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  # Fast PR validation job - matches pre-commit hooks
+  pr-checks:
+    name: PR Checks (pycodestyle, sanity, units)
     runs-on: ubuntu-latest
+    # Only run on pull requests
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install pycodestyle ansible-core==2.16.* dnspython parameterized pyyaml pytest
+          ansible-galaxy collection install community.internal_test_tools
+          ansible-galaxy collection install git+https://github.com/pfsensible/core.git
+
+      - name: Setup collection directory structure
+        run: |
+          mkdir -p ~/.ansible/collections/ansible_collections/pfsensible
+          cp -al $PWD ~/.ansible/collections/ansible_collections/pfsensible/haproxy
+
+      - name: Run pycodestyle
+        id: pycodestyle
+        working-directory: ~/.ansible/collections/ansible_collections/pfsensible/haproxy
+        run: |
+          echo "## Pycodestyle Results" >> $GITHUB_STEP_SUMMARY
+          if pycodestyle --config=setup.cfg plugins/ tests/ 2>&1 | tee /tmp/pycodestyle.txt; then
+            echo "✅ All Python files pass style checks" >> $GITHUB_STEP_SUMMARY
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Style check failures found:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat /tmp/pycodestyle.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "status=failure" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Run ansible-test sanity
+        id: sanity
+        working-directory: ~/.ansible/collections/ansible_collections/pfsensible/haproxy
+        run: |
+          echo "## Ansible Sanity Test Results" >> $GITHUB_STEP_SUMMARY
+          if ansible-test sanity --requirements --python 3.10 2>&1 | tee /tmp/sanity.txt; then
+            echo "✅ All sanity tests passed" >> $GITHUB_STEP_SUMMARY
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Sanity test failures:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -50 /tmp/sanity.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "status=failure" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Run ansible-test units
+        id: units
+        working-directory: ~/.ansible/collections/ansible_collections/pfsensible/haproxy
+        run: |
+          echo "## Ansible Unit Test Results" >> $GITHUB_STEP_SUMMARY
+          if ansible-test units --requirements --python 3.10 2>&1 | tee /tmp/units.txt; then
+            # Extract test count from pytest output
+            TEST_COUNT=$(grep -oP '\d+(?= passed)' /tmp/units.txt | tail -1)
+            echo "✅ All ${TEST_COUNT:-0} unit tests passed" >> $GITHUB_STEP_SUMMARY
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Unit test failures:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -50 /tmp/units.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "status=failure" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## 📊 PR Checks Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Pycodestyle | ${{ steps.pycodestyle.outputs.status == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Ansible Sanity | ${{ steps.sanity.outputs.status == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Ansible Units | ${{ steps.units.outputs.status == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+
+  # Comprehensive testing across Ansible versions
+  build:
+    name: Build (Python ${{ matrix.python-version }}, Ansible ${{ matrix.ansible-version }})
+    runs-on: ubuntu-latest
+    # Run on pushes and workflow_dispatch, but not on PRs (pr-checks handles those)
+    if: github.event_name != 'pull_request'
     strategy:
       fail-fast: false
       matrix:
         python-version: ['3.10']
         ansible-version: ['2.14', '2.15', '2.16']
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Checkout project
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
-      - name: Cache pip modules
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-pip
-        with:
-          path: |
-             ~/.cache
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-python-${{ matrix.python-version }}
-
-      - name: Cache ansible setup
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-ansible
-        with:
-          path: |
-             ~/work/ansible-pfsense/ansible-pfsense/ansible
-          key: build-${{ env.cache-name }}-ansible-${{ matrix.ansible-version }}
-
-      # Runs a set of commands using the runners shell
-      - name: Install ansible and deps
+      - name: Install dependencies
         run: |
-          pip install ansible-core==${{ matrix.ansible-version }}.* dnspython parameterized pyyaml
+          pip install ansible-core==${{ matrix.ansible-version }}.* dnspython parameterized pyyaml pytest
           ansible-galaxy collection install community.internal_test_tools
-          # Not currently shipping tests in releases
           ansible-galaxy collection install git+https://github.com/pfsensible/core.git
 
-      - name: Run ansible tests
+      - name: Setup collection directory structure
         run: |
-          pwd
-          dir=$(pwd)
           mkdir -p ~/.ansible/collections/ansible_collections/pfsensible
-          cd ~/.ansible/collections/ansible_collections/pfsensible
-          cp -al $dir haproxy
-          cd haproxy
-          ansible-test sanity --requirements --python ${{ matrix.python-version }}
-          ansible-test units --requirements --python ${{ matrix.python-version }}
+          cp -al $PWD ~/.ansible/collections/ansible_collections/pfsensible/haproxy
+
+      - name: Run ansible-test sanity
+        id: sanity
+        working-directory: ~/.ansible/collections/ansible_collections/pfsensible/haproxy
+        run: |
+          echo "## Ansible Sanity Test Results (Ansible ${{ matrix.ansible-version }})" >> $GITHUB_STEP_SUMMARY
+          if ansible-test sanity --requirements --python ${{ matrix.python-version }} 2>&1 | tee /tmp/sanity.txt; then
+            echo "✅ All sanity tests passed" >> $GITHUB_STEP_SUMMARY
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Sanity test failures:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -50 /tmp/sanity.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "status=failure" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Run ansible-test units
+        id: units
+        working-directory: ~/.ansible/collections/ansible_collections/pfsensible/haproxy
+        run: |
+          echo "## Ansible Unit Test Results (Ansible ${{ matrix.ansible-version }})" >> $GITHUB_STEP_SUMMARY
+          if ansible-test units --requirements --python ${{ matrix.python-version }} 2>&1 | tee /tmp/units.txt; then
+            # Extract test count from pytest output
+            TEST_COUNT=$(grep -oP '\d+(?= passed)' /tmp/units.txt | tail -1)
+            echo "✅ All ${TEST_COUNT:-0} unit tests passed" >> $GITHUB_STEP_SUMMARY
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Unit test failures:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -50 /tmp/units.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "status=failure" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## 📊 Build Summary (Python ${{ matrix.python-version }}, Ansible ${{ matrix.ansible-version }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Ansible Sanity | ${{ steps.sanity.outputs.status == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Ansible Units | ${{ steps.units.outputs.status == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
