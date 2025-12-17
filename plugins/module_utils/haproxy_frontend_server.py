@@ -5,7 +5,6 @@
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
-import re
 from ansible_collections.pfsensible.core.plugins.module_utils.module_base import PFSenseModuleBase
 
 HAPROXY_FRONTEND_SERVER_ARGUMENT_SPEC = dict(
@@ -51,19 +50,19 @@ class PFSenseHaproxyFrontendServerModule(PFSenseModuleBase):
         self._get_ansible_param(obj, 'extaddr')
         self._get_ansible_param(obj, 'extaddr_port')
         self._get_ansible_param(obj, 'extaddr_ssl')
-        obj['name'] = "'{0}_{1}'".format(self.params['extaddr'],self.params['extaddr_port'])
+        obj['name'] = "'{0}_{1}'".format(self.params['extaddr'], self.params['extaddr_port'])
 
         return obj
 
     def _validate_params(self):
         """ do some extra checks on input parameters """
 
-        #get the frontend
+        # get the frontend
         self.frontend = self._find_frontend(self.params['frontend'])
         if self.frontend is None:
             self.module.fail_json(msg="The frontend named '{0}' does not exist".format(self.params['frontend']))
 
-        #setup the a_extaddr if we dont hav eit
+        # setup the a_extaddr if we don't have it
         self.root_elt = self.frontend.find('a_extaddr')
         if self.root_elt is None:
             self.root_elt = self.pfsense.new_element('a_extaddr')
@@ -93,7 +92,6 @@ class PFSenseHaproxyFrontendServerModule(PFSenseModuleBase):
             if item_elt.tag != 'item':
                 continue
             name_elt = item_elt.find('name')
-            print(name_elt)
             if name_elt is not None and name_elt.text == self.obj['name']:
                 return item_elt
         return None
@@ -136,4 +134,4 @@ $result = haproxy_check_and_run($savemsg, true); if ($result) unlink_if_exists($
 
     def _get_obj_name(self):
         """ return obj's name """
-        return "'{0}_{1}'".format(self.obj['extaddr'],self.obj['extaddr_port'])
+        return "'{0}_{1}'".format(self.obj['extaddr'], self.obj['extaddr_port'])

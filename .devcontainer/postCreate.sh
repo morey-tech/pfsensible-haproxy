@@ -9,6 +9,12 @@ echo "pfSensible HAProxy DevContainer Setup"
 echo "========================================="
 echo ""
 
+# Install system dependencies
+echo "📦 Installing system dependencies..."
+sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+echo "✓ System dependencies installed"
+echo ""
+
 # Install Python requirements
 echo "📦 Installing Python requirements..."
 pip install --quiet --upgrade pip
@@ -19,7 +25,8 @@ echo ""
 # Install Ansible collections
 echo "📦 Installing Ansible collections..."
 ansible-galaxy collection install community.internal_test_tools
-ansible-galaxy collection install git+https://github.com/pfsensible/core.git
+# Install pfsensible.core into the workspace collection root so ansible-test can find it
+ansible-galaxy collection install -p /workspaces/ansible_collections git+https://github.com/pfsensible/core.git
 echo "✓ Ansible collections installed"
 echo ""
 
