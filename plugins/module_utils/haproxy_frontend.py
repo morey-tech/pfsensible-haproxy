@@ -66,7 +66,7 @@ class PFSenseHaproxyFrontendModule(PFSenseModuleBase):
             self._get_ansible_param(obj, 'max_connections')
 
             if 'ssloffloadcert' in params and params['ssloffloadcert'] is not None and params['ssloffloadcert'] != '':
-                search_field_type='type'
+                search_field_type = 'type'
                 if 'ssloffloadcert_type_search' in params and params['ssloffloadcert_type_search'] is not None and params['ssloffloadcert_type_search'] != '':
                     search_field_type = params['ssloffloadcert_type_search']
 
@@ -77,16 +77,18 @@ class PFSenseHaproxyFrontendModule(PFSenseModuleBase):
 
             self._get_ansible_param(obj, 'ssloffloadacl_an')
 
-            #check for redirect
-            if 'addhttp_https_redirect' in params and params['addhttp_https_redirect'] is not None and params['addhttp_https_redirect'] != '' and params['addhttp_https_redirect']:
-                #add redirect rules
+            # check for redirect
+            if ('addhttp_https_redirect' in params and
+                    params['addhttp_https_redirect'] is not None and
+                    params['addhttp_https_redirect'] != '' and
+                    params['addhttp_https_redirect']):
+                # add redirect rules
                 aval = dict()
                 val = dict()
                 val['action'] = 'http-request_redirect'
                 val['http-request_redirectrule'] = 'scheme https'
                 aval['item'] = val
                 obj['a_actionitems'] = aval
-
 
         return obj
 
