@@ -13,7 +13,7 @@ HAPROXY_FRONTEND_ARGUMENT_SPEC = dict(
     name=dict(required=True, type='str'),
     status=dict(required=False, type='str'),
     desc=dict(required=False, type='str'),
-    type=dict(default='http', choices=['http', 'https']),
+    type=dict(default='http', choices=['http', 'https', 'tcp']),
     httpclose=dict(default='http-keep-alive', choices=['http-keep-alive']),
     backend_serverpool=dict(required=False, type='str'),
     ssloffloadcert=dict(required=False, type='str'),
@@ -61,7 +61,9 @@ class PFSenseHaproxyFrontendModule(PFSenseModuleBase):
             self._get_ansible_param(obj, 'desc')
             self._get_ansible_param(obj, 'type')
             self._get_ansible_param(obj, 'status')
-            self._get_ansible_param(obj, 'httpclose')
+            # Only add httpclose for HTTP mode (not https or tcp)
+            if obj.get('type', 'http') == 'http':
+                self._get_ansible_param(obj, 'httpclose')
             self._get_ansible_param(obj, 'backend_serverpool')
             self._get_ansible_param(obj, 'max_connections')
 
@@ -97,6 +99,25 @@ class PFSenseHaproxyFrontendModule(PFSenseModuleBase):
         # check name
         if re.search(r'[^a-zA-Z0-9\.\-_]', self.params['name']) is not None:
             self.module.fail_json(msg="The field 'name' contains invalid characters.")
+
+        # Check for HTTP-specific parameters with non-HTTP modes
+        frontend_type = self.params.get('type', 'http')
+
+        # httpclose and addhttp_https_redirect are only valid for type='http'
+        if frontend_type != 'http':
+            # Validate httpclose
+            if 'httpclose' in self.params and self.params['httpclose'] is not None:
+                self.module.fail_json(
+                    msg=f"Parameter 'httpclose' cannot be used with frontend type '{frontend_type}'. "
+                        "This parameter is only valid for 'http' type frontends."
+                )
+
+            # Validate addhttp_https_redirect
+            if self.params.get('addhttp_https_redirect'):
+                self.module.fail_json(
+                    msg=f"Parameter 'addhttp_https_redirect' cannot be used with frontend type '{frontend_type}'. "
+                        "HTTP to HTTPS redirect is only valid for 'http' type frontends."
+                )
 
     ##############################
     # XML processing

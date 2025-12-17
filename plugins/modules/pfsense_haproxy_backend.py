@@ -26,7 +26,9 @@ options:
     required: true
     type: str
   balance:
-    description: The load balancing option.
+    description:
+      - The load balancing option.
+      - Note that C(uri) option is only meaningful when used with HTTP/HTTPS frontends.
     required: false
     type: str
     choices: ['none', 'roundrobin', 'static-rr', 'leastconn', 'source', 'uri']
@@ -69,14 +71,18 @@ options:
     required: false
     type: bool
   httpcheck_method:
-    description: HTTP check method. OPTIONS is the method usually best to perform server checks, HEAD and GET can also be used. If the server gets marked as
-      down in the stats page then changing this to GET usually has the biggest chance of working, but might cause more processing overhead on the websever and
-      is less easy to filter out of its logs.
+    description:
+      - HTTP check method.
+      - Only relevant when used with HTTP/HTTPS frontends and C(check_type=HTTP).
+      - OPTIONS is the method usually best to perform server checks, HEAD and GET can also be used.
+      - If the server gets marked as down in the stats page then changing this to GET usually has the biggest chance of working.
     required: false
     type: str
     choices: ['OPTIONS', 'HEAD', 'GET', 'POST', 'PUT', 'DELETE', 'TRACE']
   monitor_uri:
-    description: Url used by http check requests.
+    description:
+      - URL used by HTTP check requests.
+      - Only relevant when used with HTTP/HTTPS frontends and C(check_type=HTTP).
     required: false
     type: str
   monitor_httpversion:
@@ -99,11 +105,29 @@ options:
 """
 
 EXAMPLES = """
-- name: Add backend
+- name: Add HTTP backend with HTTP health checks
   pfsensible.haproxy.pfsense_haproxy_backend:
-    name: exchange
-    balance: leastconn
+    name: web-backend
+    balance: roundrobin
+    check_type: HTTP
     httpcheck_method: OPTIONS
+    monitor_uri: /health
+    state: present
+
+- name: Add TCP backend for MySQL with basic health checks
+  pfsensible.haproxy.pfsense_haproxy_backend:
+    name: mysql-backend
+    balance: leastconn
+    check_type: Basic
+    check_frequency: 2000
+    state: present
+
+- name: Add TCP backend with SSL health checks
+  pfsensible.haproxy.pfsense_haproxy_backend:
+    name: redis-backend
+    balance: roundrobin
+    check_type: SSL
+    check_frequency: 1000
     state: present
 
 - name: Remove backend
