@@ -67,10 +67,18 @@ Modules must run as root in order to make changes to the system.  By default pfS
 ```
 and then configure sudo so that your user has permission to use sudo.
 ## Modules
+
 The following modules are currently available:
 
-* [pfsense_haproxy_backend](https://github.com/pfsensible/haproxy/wiki/pfsense_haproxy_backend) for HAProxy backends
-* [pfsense_haproxy_backend_server](https://github.com/pfsensible/haproxy/wiki/pfsense_haproxy_backend_server) for HAProxy backends servers
+### Backend Management
+
+* [pfsense_haproxy_backend](docs/modules/pfsense_haproxy_backend.md) - Manage HAProxy backends
+* [pfsense_haproxy_backend_server](docs/modules/pfsense_haproxy_backend_server.md) - Manage HAProxy backend servers
+
+### Frontend Management
+
+* [pfsense_haproxy_frontend](docs/modules/pfsense_haproxy_frontend.md) - Manage HAProxy frontends
+* [pfsense_haproxy_frontend_server](docs/modules/pfsense_haproxy_frontend_server.md) - Manage HAProxy frontend bind addresses
 
 The modules assume that you have already installed the haproxy pfSense package.
 
