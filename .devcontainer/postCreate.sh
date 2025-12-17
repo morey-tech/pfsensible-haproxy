@@ -24,6 +24,7 @@ echo ""
 
 # Install Ansible collections
 echo "📦 Installing Ansible collections..."
+sudo chown -R vscode:vscode /workspaces/ansible_collections
 ansible-galaxy collection install community.internal_test_tools
 # Install pfsensible.core into the workspace collection root so ansible-test can find it
 ansible-galaxy collection install -p /workspaces/ansible_collections git+https://github.com/pfsensible/core.git
