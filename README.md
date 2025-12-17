@@ -2,19 +2,39 @@
 
 This is a set of modules to allow you to configure HAProxy on pfSense firewalls with ansible.
 
-## Installation using ansible galaxy
+## Installation from GitHub
 
-To install:
+Since this is a fork of the pfsensible.haproxy collection, you can install it directly from the GitHub repository.
 
-```
-ansible-galaxy collection install pfsensible.haproxy
+### Install from default branch
+
+To install the latest version from the main branch:
+
+```bash
+ansible-galaxy collection install git+https://github.com/morey-tech/pfsensible-haproxy.git
 ```
 
-Optionally, you can specify the path of the collection installation with the `-p` option.
+### Install from a specific branch
 
+To install from a specific branch (e.g., for testing new features):
+
+```bash
+# Install from feature branch
+ansible-galaxy collection install git+https://github.com/morey-tech/pfsensible-haproxy.git,feature/add_haproxy_frontend
+
+# Install from main branch (explicit)
+ansible-galaxy collection install git+https://github.com/morey-tech/pfsensible-haproxy.git,main
 ```
-ansible-galaxy collection install pfsensible.haproxy -p ./collections
+
+### Install to custom path
+
+Optionally, you can specify the installation path with the `-p` option:
+
+```bash
+ansible-galaxy collection install git+https://github.com/morey-tech/pfsensible-haproxy.git -p ./collections
 ```
+
+### Configuration
 
 Additionally, you can set the `collections_paths` option in your `ansible.cfg` file to automatically designate install locations.
 
