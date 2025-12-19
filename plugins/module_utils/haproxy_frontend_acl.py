@@ -52,6 +52,7 @@ class PFSenseHaproxyFrontendAclModule(PFSenseModuleBase):
             self.module.fail_json(msg='Unable to find frontends (ha_backends) XML configuration entry. Are you sure haproxy is installed ?')
 
         self.frontend = None
+        self.ha_acls_elt = None
 
     ##############################
     # params processing
@@ -98,6 +99,12 @@ class PFSenseHaproxyFrontendAclModule(PFSenseModuleBase):
             self.root_elt = self.pfsense.new_element('a_acl')
             self.frontend.append(self.root_elt)
 
+        # setup the ha_acls container if we don't have it (required for haproxy.cfg generation)
+        self.ha_acls_elt = self.frontend.find('ha_acls')
+        if self.ha_acls_elt is None:
+            self.ha_acls_elt = self.pfsense.new_element('ha_acls')
+            self.frontend.append(self.ha_acls_elt)
+
     ##############################
     # XML processing
     #
@@ -126,6 +133,16 @@ class PFSenseHaproxyFrontendAclModule(PFSenseModuleBase):
                 return item_elt
         return None
 
+    def _find_ha_acl_target(self):
+        """ find the XML target in ha_acls section """
+        for item_elt in self.ha_acls_elt:
+            if item_elt.tag != 'item':
+                continue
+            name_elt = item_elt.find('name')
+            if name_elt is not None and name_elt.text == self.obj['name']:
+                return item_elt
+        return None
+
     def _get_next_id(self):
         """ get next free haproxy id  """
         max_id = 99
@@ -145,6 +162,42 @@ class PFSenseHaproxyFrontendAclModule(PFSenseModuleBase):
         """ make the target pfsense reload haproxy """
         return self.pfsense.phpshell('''require_once("haproxy/haproxy.inc");
 $result = haproxy_check_and_run($savemsg, true); if ($result) unlink_if_exists($d_haproxyconfdirty_path);''')
+
+    def _add(self):
+        """ add the ACL to both a_acl and ha_acls sections """
+        # Let parent class handle a_acl section
+        super(PFSenseHaproxyFrontendAclModule, self)._add()
+
+        # Also add to ha_acls section
+        ha_acl_elt = self._find_ha_acl_target()
+        if ha_acl_elt is None:
+            ha_acl_elt = self.pfsense.new_element('item')
+            self.ha_acls_elt.append(ha_acl_elt)
+
+        # Copy relevant fields to ha_acls item
+        self.pfsense.copy_dict_to_element(self.obj, ha_acl_elt)
+
+    def _copy_and_update_target(self):
+        """ update both a_acl and ha_acls sections """
+        # Let parent handle a_acl
+        before = super(PFSenseHaproxyFrontendAclModule, self)._copy_and_update_target()
+
+        # Also update ha_acls
+        ha_acl_elt = self._find_ha_acl_target()
+        if ha_acl_elt is not None:
+            self.pfsense.copy_dict_to_element(self.obj, ha_acl_elt)
+
+        return before
+
+    def _remove(self):
+        """ remove the ACL from both sections """
+        # Remove from ha_acls first
+        ha_acl_elt = self._find_ha_acl_target()
+        if ha_acl_elt is not None:
+            self.ha_acls_elt.remove(ha_acl_elt)
+
+        # Let parent handle a_acl removal
+        super(PFSenseHaproxyFrontendAclModule, self)._remove()
 
     ##############################
     # Logging
