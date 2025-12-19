@@ -5,7 +5,24 @@
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
+import re
+import socket
 from ansible_collections.pfsensible.core.plugins.module_utils.module_base import PFSenseModuleBase
+
+# Standard pfSense address choices for external addresses
+EXTADDR_STANDARD_CHOICES = [
+    'any_ipv4',
+    'localhost_ipv4',
+    'wan_ipv4',
+    'lan_ipv4',
+    'any_ipv6',
+    'localhost_ipv6',
+    'wan_ipv6',
+    'lan_ipv6',
+]
+
+# Pattern for interface-specific options: opt<digits>_ipv4 or opt<digits>_ipv6
+EXTADDR_INTERFACE_PATTERN = re.compile(r'^opt\d+_ipv[46]$')
 
 HAPROXY_FRONTEND_SERVER_ARGUMENT_SPEC = dict(
     state=dict(default='present', choices=['present', 'absent']),
@@ -54,8 +71,45 @@ class PFSenseHaproxyFrontendServerModule(PFSenseModuleBase):
 
         return obj
 
+    def _validate_extaddr(self, extaddr):
+        """Validate the extaddr parameter value."""
+        if extaddr is None:
+            return  # Not provided, skip validation
+
+        # Check standard choices
+        if extaddr in EXTADDR_STANDARD_CHOICES:
+            return
+
+        # Check interface pattern (opt<N>_ipv4 or opt<N>_ipv6)
+        if EXTADDR_INTERFACE_PATTERN.match(extaddr):
+            return
+
+        # Check if valid IPv4 address
+        try:
+            socket.inet_pton(socket.AF_INET, extaddr)
+            return
+        except socket.error:
+            pass
+
+        # Check if valid IPv6 address
+        try:
+            socket.inet_pton(socket.AF_INET6, extaddr)
+            return
+        except socket.error:
+            pass
+
+        # Invalid value
+        self.module.fail_json(
+            msg="Invalid extaddr value '{0}'. Must be one of: {1}, "
+                "an interface option (opt<N>_ipv4 or opt<N>_ipv6), "
+                "or a valid IPv4/IPv6 address.".format(
+                    extaddr, ', '.join(EXTADDR_STANDARD_CHOICES)))
+
     def _validate_params(self):
         """ do some extra checks on input parameters """
+
+        # validate extaddr value
+        self._validate_extaddr(self.params.get('extaddr'))
 
         # get the frontend
         self.frontend = self._find_frontend(self.params['frontend'])

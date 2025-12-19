@@ -26,7 +26,12 @@ options:
     required: true
     type: str
   extaddr:
-    description: External address to bind to.
+    description:
+      - External address to bind to.
+      - Can be a standard pfSense address option, an interface-specific option, or a custom IP address.
+      - "Standard options: any_ipv4, localhost_ipv4, wan_ipv4, lan_ipv4, any_ipv6, localhost_ipv6, wan_ipv6, lan_ipv6"
+      - "Interface options: opt<N>_ipv4 or opt<N>_ipv6 where N is the interface number (e.g., opt1_ipv4, opt2_ipv6)"
+      - "Custom addresses: Any valid IPv4 or IPv6 address (e.g., 192.168.1.1, 2001:db8::1)"
     required: false
     type: str
   extaddr_port:
@@ -45,18 +50,47 @@ options:
 """
 
 EXAMPLES = """
-- name: Add frontend server binding
+- name: Add frontend server binding with custom IPv4 address
   pfsensible.haproxy.pfsense_haproxy_frontend_server:
     frontend: web-frontend
-    extaddr: 0.0.0.0
+    extaddr: 192.168.1.100
     extaddr_port: 443
     extaddr_ssl: "yes"
+    state: present
+
+- name: Bind to any IPv4 address
+  pfsensible.haproxy.pfsense_haproxy_frontend_server:
+    frontend: web-frontend
+    extaddr: any_ipv4
+    extaddr_port: 80
+    state: present
+
+- name: Bind to WAN interface address
+  pfsensible.haproxy.pfsense_haproxy_frontend_server:
+    frontend: web-frontend
+    extaddr: wan_ipv4
+    extaddr_port: 443
+    extaddr_ssl: "yes"
+    state: present
+
+- name: Bind to optional interface (e.g., LAB network)
+  pfsensible.haproxy.pfsense_haproxy_frontend_server:
+    frontend: internal-frontend
+    extaddr: opt1_ipv4
+    extaddr_port: 8080
+    state: present
+
+- name: Bind to IPv6 address
+  pfsensible.haproxy.pfsense_haproxy_frontend_server:
+    frontend: web-frontend
+    extaddr: any_ipv6
+    extaddr_port: 443
     state: present
 
 - name: Remove frontend server binding
   pfsensible.haproxy.pfsense_haproxy_frontend_server:
     frontend: web-frontend
-    extaddr: 0.0.0.0
+    extaddr: wan_ipv4
     extaddr_port: 443
     state: absent
 """
