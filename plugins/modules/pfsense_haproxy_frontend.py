@@ -47,10 +47,10 @@ options:
     description:
       - HTTP close mode for connection handling.
       - Only valid for C(http) type frontends.
+      - Defaults to C(http-keep-alive) when C(type=http) and not specified.
     required: false
     type: str
     choices: ['http-keep-alive']
-    default: 'http-keep-alive'
   backend_serverpool:
     description: Backend server pool to use.
     required: false
