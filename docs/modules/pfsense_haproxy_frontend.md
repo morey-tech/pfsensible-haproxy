@@ -14,7 +14,7 @@ Manage pfSense HAProxy frontends
 | status | str | no | - | - | Frontend status (enabled/disabled). |
 | desc | str | no | - | - | Frontend description. |
 | type | str | no | http | http, https, tcp | Frontend type/mode. `http` - HTTP/HTTPS with offloading (SSL termination); `https` - SSL/HTTPS (TCP mode) for SNI-based routing; `tcp` - Plain TCP proxying for non-HTTP protocols. |
-| httpclose | str | no | http-keep-alive | http-keep-alive | HTTP close mode for connection handling. Only valid for `http` type frontends. |
+| httpclose | str | no | - | http-keep-alive | HTTP close mode for connection handling. Only valid for `http` type frontends. Defaults to `http-keep-alive` when `type=http` and not specified. |
 | backend_serverpool | str | no | - | - | Backend server pool to use. |
 | ssloffloadcert | str | no | - | - | SSL certificate for offloading. |
 | ssloffloadcert_type_search | str | no | descr | - | Field type to search for SSL certificate. |

@@ -14,7 +14,7 @@ HAPROXY_FRONTEND_ARGUMENT_SPEC = dict(
     status=dict(required=False, type='str'),
     desc=dict(required=False, type='str'),
     type=dict(default='http', choices=['http', 'https', 'tcp']),
-    httpclose=dict(default='http-keep-alive', choices=['http-keep-alive']),
+    httpclose=dict(required=False, choices=['http-keep-alive']),
     backend_serverpool=dict(required=False, type='str'),
     ssloffloadcert=dict(required=False, type='str'),
     ssloffloadcert_type_search=dict(default='descr', type='str'),
@@ -63,7 +63,11 @@ class PFSenseHaproxyFrontendModule(PFSenseModuleBase):
             self._get_ansible_param(obj, 'status')
             # Only add httpclose for HTTP mode (not https or tcp)
             if obj.get('type', 'http') == 'http':
-                self._get_ansible_param(obj, 'httpclose')
+                # Apply default if not explicitly set
+                if self.params.get('httpclose') is None:
+                    obj['httpclose'] = 'http-keep-alive'
+                else:
+                    self._get_ansible_param(obj, 'httpclose')
             self._get_ansible_param(obj, 'backend_serverpool')
             self._get_ansible_param(obj, 'max_connections')
 
