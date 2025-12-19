@@ -15,6 +15,14 @@ sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
 echo "✓ System dependencies installed"
 echo ""
 
+# Install Claude Code CLI
+echo "📦 Installing Claude Code CLI..."
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt-get install -y -qq nodejs
+sudo npm install -g @anthropic-ai/claude-code
+echo "✓ Claude Code CLI installed"
+echo ""
+
 # Install Python requirements
 echo "📦 Installing Python requirements..."
 pip install --quiet --upgrade pip
