@@ -136,7 +136,7 @@ Manage pfSense HAProxy frontend actions
 
 ## Author
 
-- Chris Morton (@cosmosified)
+- Nicholas Morey (@morey-tech)
 
 ## Version
 

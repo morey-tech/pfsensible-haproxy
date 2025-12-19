@@ -87,7 +87,7 @@ Manage pfSense HAProxy frontend ACLs
 
 ## Author
 
-- Chris Morton (@cosmosified)
+- Nicholas Morey (@morey-tech)
 
 ## Version
 

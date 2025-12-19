@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2025, Chris Morton <cosmo@cosmo.2y.net>
+# Copyright: (c) 2025, Nicholas Morey <nicholas@morey.tech>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -15,7 +15,7 @@ DOCUMENTATION = """
 ---
 module: pfsense_haproxy_frontend_acl
 version_added: 0.3.0
-author: Chris Morton (@cosmosified)
+author: Nicholas Morey (@morey-tech)
 short_description: Manage pfSense HAProxy frontend ACLs
 description:
   - Manage pfSense HAProxy frontend Access Control Lists (ACLs) for SNI-based routing.
