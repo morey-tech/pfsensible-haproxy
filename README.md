@@ -79,6 +79,8 @@ The following modules are currently available:
 
 * [pfsense_haproxy_frontend](docs/modules/pfsense_haproxy_frontend.md) - Manage HAProxy frontends
 * [pfsense_haproxy_frontend_server](docs/modules/pfsense_haproxy_frontend_server.md) - Manage HAProxy frontend bind addresses
+* [pfsense_haproxy_frontend_acl](docs/modules/pfsense_haproxy_frontend_acl.md) - Manage HAProxy frontend ACLs for SNI-based routing
+* [pfsense_haproxy_frontend_action](docs/modules/pfsense_haproxy_frontend_action.md) - Manage HAProxy frontend actions
 
 The modules assume that you have already installed the haproxy pfSense package.
 
