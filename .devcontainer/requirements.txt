@@ -2,7 +2,7 @@
 # Matches CI requirements from .github/workflows/main.yml
 
 # Ansible core - using latest tested version
-ansible-core>=2.16,<2.17
+ansible-core>=2.20,<2.21
 
 # DNS utilities (used in tests)
 dnspython
