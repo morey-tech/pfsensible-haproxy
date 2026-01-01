@@ -1,6 +1,6 @@
 {
   "name": "pfSensible HAProxy Development",
-  "image": "mcr.microsoft.com/devcontainers/python:3.10",
+  "image": "mcr.microsoft.com/devcontainers/python:3.14",
 
   // Mount the workspace in the proper Ansible collection structure
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/ansible_collections/pfsensible/haproxy,type=bind,consistency=cached",
